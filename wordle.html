@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Word Guess</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.lineicons.com/4.0/lineicons.css" rel="stylesheet">
+  <style>
+    body{font-family:Georgia,serif}
+    .navy{background:#3112ff}.coral{background:#f35c44}.yellow{background:#ffd500}.blue{background:#56bdf5}.pink{background:#f15bb5}.green{background:#9be88d}.panel{min-height:32rem}
+    .content-wrap{max-width:34rem}
+    .tile{aspect-ratio:1;border:2px solid rgba(0,0,0,.25);background:rgba(255,255,255,.12);font-weight:700;transition:.15s}
+    .tile.filled{border-color:rgba(0,0,0,.55);background:rgba(255,255,255,.22)}
+    .tile.correct{background:#6aaa64!important;border-color:#6aaa64!important;color:#fff}
+    .tile.present{background:#c9b458!important;border-color:#c9b458!important;color:#fff}
+    .tile.absent{background:#3a3a3c!important;border-color:#3a3a3c!important;color:#fff}
+    .key{min-width:2.2rem}
+    .key.wide{min-width:4rem}
+  </style>
+</head>
+<body class="bg-white">
+  <nav class="navbar navbar-expand-lg navbar-dark navy py-3">
+    <div class="container-fluid justify-content-center">
+      <a class="navbar-brand fw-bold fs-3" href="#">Link</a>
+      <button class="navbar-toggler position-absolute end-0 me-3" type="button" data-bs-toggle="collapse" data-bs-target="#navLinks">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse justify-content-end" id="navLinks">
+        <ul class="navbar-nav gap-lg-3 text-center">
+          <li class="nav-item"><a class="nav-link fw-semibold" href="index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link fw-semibold" href="game.html">Game</a></li>
+          <li class="nav-item"><a class="nav-link fw-semibold" href="https://youtube.com" target="_blank" rel="noopener"><i class="lni lni-youtube me-1"></i>YouTube</a></li>
+          <li class="nav-item"><a class="nav-link fw-semibold" href="https://linkedin.com" target="_blank" rel="noopener"><i class="lni lni-linkedin-original me-1"></i>LinkedIn</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <header class="coral text-center py-3 fw-bold fs-2">Header</header>
+
+  <main class="container-fluid px-0">
+    <div class="row g-0">
+      <aside class="col-12 col-md-2 yellow d-flex align-items-start justify-content-center p-4 panel order-1 order-md-1">
+        <div class="fw-bold fs-2"><i class="lni lni-star-filled me-2"></i>Aside 1</div>
+      </aside>
+
+      <section class="col-12 col-md-8 blue d-flex align-items-center justify-content-center p-3 panel order-3 order-md-2">
+        <div class="content-wrap w-100 text-center text-white">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="fw-bold fs-4">Word Guess</div>
+            <div class="small fw-bold">Guess the 5-letter word</div>
+          </div>
+          <div id="board" class="d-grid gap-2 mb-3"></div>
+          <div id="message" class="fw-bold mb-3" aria-live="polite"></div>
+          <div id="keyboard" class="d-grid gap-2"></div>
+        </div>
+      </section>
+
+      <aside class="col-12 col-md-2 pink d-flex align-items-start justify-content-center p-4 panel order-2 order-md-3">
+        <div class="fw-bold fs-2"><i class="lni lni-heart-filled me-2"></i>Aside 2</div>
+      </aside>
+    </div>
+  </main>
+
+  <footer class="green text-center py-3 fw-bold fs-2">Footer</footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const words=['crane','light','sound','plant','story','grape','brink','smile','storm','flame'];
+    const answer=words[Math.floor(Math.random()*words.length)];
+    const board=document.getElementById('board');
+    const keyboard=document.getElementById('keyboard');
+    const message=document.getElementById('message');
+    const layout=[['Q','W','E','R','T','Y','U','I','O','P'],['A','S','D','F','G','H','J','K','L'],['Enter','Z','X','C','V','B','N','M','⌫']];
+    const state={row:0,col:0,guess:'',done:false};
+    const keyButtons=new Map();
+    const tiles=[];
+
+    board.style.gridTemplateRows='repeat(6,1fr)';
+    for(let r=0;r<6;r++){
+      const row=document.createElement('div');
+      row.className='row g-2 row-cols-5';
+      for(let c=0;c<5;c++){
+        const tile=document.createElement('div');
+        tile.className='col tile d-flex align-items-center justify-content-center rounded fs-2 text-uppercase';
+        row.appendChild(tile);
+        tiles.push(tile);
+      }
+      board.appendChild(row);
+    }
+
+    layout.forEach(line=>{
+      const row=document.createElement('div');
+      row.className='d-flex flex-wrap justify-content-center gap-2';
+      line.forEach(key=>{
+        const button=document.createElement('button');
+        button.className='btn btn-light key fw-bold';
+        button.textContent=key;
+        if(key==='Enter'||key==='⌫') button.classList.add('wide');
+        if(/^[A-Z]$/.test(key)) keyButtons.set(key, button);
+        button.addEventListener('click',()=>handleKey(key));
+        row.appendChild(button);
+      });
+      keyboard.appendChild(row);
+    });
+
+    const setMessage = text => message.textContent = text;
+    const currentTiles = () => tiles.slice(state.row*5, state.row*5+5);
+    const paint = () => currentTiles().forEach((tile, index) => { tile.textContent = state.guess[index] || ''; tile.classList.toggle('filled', !!state.guess[index]); });
+    const scoreRow = guess => {
+      const result = Array(5).fill('absent');
+      const answerLetters = answer.split('');
+      guess.split('').forEach((letter, index) => { if(letter === answerLetters[index]) { result[index] = 'correct'; answerLetters[index] = null; } });
+      guess.split('').forEach((letter, index) => { if(result[index] === 'correct') return; const match = answerLetters.indexOf(letter); if(match > -1) { result[index] = 'present'; answerLetters[match] = null; } });
+      return result;
+    };
+    const updateKeyboard = (guess, result) => {
+      guess.split('').forEach((letter, index) => {
+        const button = keyButtons.get(letter.toUpperCase());
+        if (!button) return;
+        button.classList.remove('btn-light');
+        button.classList.add('btn-secondary');
+        if (result[index] === 'present') {
+          button.classList.remove('btn-secondary');
+          button.classList.add('btn-warning');
+        }
+        if (result[index] === 'correct') {
+          button.classList.remove('btn-secondary', 'btn-warning');
+          button.classList.add('btn-success');
+        }
+      });
+    };
+    const finish = won => { state.done = true; setMessage(won ? 'Solved' : `Answer: ${answer.toUpperCase()}`); };
+    const commit = () => {
+      if(state.guess.length !== 5 || state.done) return;
+      const result = scoreRow(state.guess);
+      currentTiles().forEach((tile, index) => {
+        tile.classList.add(result[index]);
+        tile.classList.add('filled');
+      });
+      updateKeyboard(state.guess, result);
+      if(state.guess === answer) return finish(true);
+      state.row++;
+      state.col=0;
+      state.guess='';
+      if(state.row === 6) finish(false);
+      paint();
+      setMessage('');
+    };
+    const handleKey = key => {
+      if(state.done) return;
+      if(key === 'Enter') return commit();
+      if(key === '⌫') { state.guess = state.guess.slice(0,-1); state.col = Math.max(0, state.col - 1); paint(); return; }
+      if(/^[A-Z]$/.test(key) && state.guess.length < 5) { state.guess += key.toLowerCase(); state.col++; paint(); }
+    };
+    window.addEventListener('keydown', event => handleKey(event.key === 'Backspace' ? '⌫' : event.key.length === 1 ? event.key.toUpperCase() : event.key));
+  </script>
+</body>
+</html>
