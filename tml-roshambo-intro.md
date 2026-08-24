@@ -17,21 +17,18 @@ user-story: "As a player, I want to choose rock, paper, or scissors, play agains
 
 <div id="results"></div>
 <script>
-playRoshambo = function(clientGesture){
-    if (clientGesture=='rock') {
-        result = "tie";
-    } // end if
-
-    if (clientGesture=='paper') {
-        result = "win";
-    } // end if
-
-    if (clientGesture=='scissors') {
-        result = "lose";
-    } // end if
-
-    document.getElementById('results').innerHTML = result;
-} // end method
+    playRoshambo = function(clientGesture){
+        if (clientGesture=='rock') {
+            result = "tie";
+        } // end if
+        if (clientGesture=='paper') {
+            result = "win";
+        } // end if
+        if (clientGesture=='scissors') {
+            result = "lose";
+        } // end if
+        document.getElementById('results').innerHTML = result;
+    } // end method
 
 
 </script>
